@@ -3,22 +3,23 @@ package ru.otus.bank.service.impl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.otus.bank.dao.AccountDao;
 import ru.otus.bank.entity.Account;
+import ru.otus.bank.entity.Agreement;
 import ru.otus.bank.service.exception.AccountException;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AccountServiceImplTest {
@@ -27,6 +28,77 @@ public class AccountServiceImplTest {
 
     @InjectMocks
     AccountServiceImpl accountServiceImpl;
+
+    @Mock
+    Agreement agreementMock;
+
+    @Test
+    public void testAddAccount() {
+        Account testAccount = new Account();
+        testAccount.setAgreementId(1L);
+        testAccount.setNumber("1234");
+        testAccount.setType(0);
+        testAccount.setAmount(BigDecimal.ONE);
+
+        when(agreementMock.getId()).thenReturn(1L);
+
+        ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
+
+        when(accountDao.save(accountCaptor.capture())).thenReturn(testAccount);
+
+        accountServiceImpl.addAccount(agreementMock, "1234", 0, BigDecimal.ONE);
+
+        assertEquals(testAccount.getAgreementId(), accountCaptor.getValue().getAgreementId());
+        assertEquals(testAccount.getNumber(), accountCaptor.getValue().getNumber());
+        assertEquals(testAccount.getType(), accountCaptor.getValue().getType());
+        assertEquals(testAccount.getAmount(), accountCaptor.getValue().getAmount());
+    }
+
+    @Test
+    public void testGetAccounts() {
+        doAnswer(invocation -> {
+            long agreementId = invocation.getArgument(0);
+            Account account = new Account();
+            account.setAgreementId(agreementId);
+            return List.of(account);
+        }).when(accountDao).findByAgreementId(anyLong());
+
+        when(agreementMock.getId()).thenReturn(1L);
+
+        List<Account> resultAccounts = accountServiceImpl.getAccounts(agreementMock);
+
+        assertEquals(1, resultAccounts.size());
+        assertEquals(1L, resultAccounts.get(0).getAgreementId());
+    }
+
+    @Test
+    public void testCharge() {
+        Account testAccount = new Account();
+        testAccount.setAmount(BigDecimal.TEN);
+
+        when(accountDao.findById(anyLong())).thenReturn(Optional.of(testAccount));
+
+        ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
+        when(accountDao.save(accountCaptor.capture())).thenReturn(testAccount);
+
+        accountServiceImpl.charge(2L, BigDecimal.ONE);
+
+        assertEquals(BigDecimal.valueOf(9), accountCaptor.getValue().getAmount());
+    }
+
+    @Test
+    public void testNoSourceAccountCharge() {
+        when(accountDao.findById(anyLong())).thenReturn(Optional.empty());
+
+        AccountException accountException = assertThrows(AccountException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                accountServiceImpl.charge(1L, BigDecimal.ONE);
+            }
+        });
+
+        assertEquals("No source account", accountException.getLocalizedMessage());
+    }
 
     @Test
     public void testTransfer() {
