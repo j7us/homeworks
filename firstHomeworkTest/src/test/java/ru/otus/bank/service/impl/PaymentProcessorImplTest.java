@@ -17,7 +17,7 @@ import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class PaymentProcessorImplTest {
+class PaymentProcessorImplTest {
 
     @Mock
     AccountService accountService;
@@ -26,7 +26,7 @@ public class PaymentProcessorImplTest {
     PaymentProcessorImpl paymentProcessor;
 
     @Test
-    public void testTransfer() {
+    void testTransfer() {
         Agreement sourceAgreement = new Agreement();
         sourceAgreement.setId(1L);
 
