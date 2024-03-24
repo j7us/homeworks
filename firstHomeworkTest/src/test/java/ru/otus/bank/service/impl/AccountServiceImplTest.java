@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AccountServiceImplTest {
+class AccountServiceImplTest {
     @Mock
     AccountDao accountDao;
 
@@ -33,7 +33,7 @@ public class AccountServiceImplTest {
     Agreement agreementMock;
 
     @Test
-    public void testAddAccount() {
+    void testAddAccount() {
         Account testAccount = new Account();
         testAccount.setAgreementId(1L);
         testAccount.setNumber("1234");
@@ -55,7 +55,7 @@ public class AccountServiceImplTest {
     }
 
     @Test
-    public void testGetAccounts() {
+    void testGetAccounts() {
         doAnswer(invocation -> {
             long agreementId = invocation.getArgument(0);
             Account account = new Account();
@@ -72,7 +72,7 @@ public class AccountServiceImplTest {
     }
 
     @Test
-    public void testCharge() {
+    void testCharge() {
         Account testAccount = new Account();
         testAccount.setAmount(BigDecimal.TEN);
 
@@ -87,7 +87,7 @@ public class AccountServiceImplTest {
     }
 
     @Test
-    public void testNoSourceAccountCharge() {
+    void testNoSourceAccountCharge() {
         when(accountDao.findById(anyLong())).thenReturn(Optional.empty());
 
         AccountException accountException = assertThrows(AccountException.class, new Executable() {
@@ -101,7 +101,7 @@ public class AccountServiceImplTest {
     }
 
     @Test
-    public void testTransfer() {
+    void testTransfer() {
         Account sourceAccount = new Account();
         sourceAccount.setAmount(new BigDecimal(100));
 
@@ -118,7 +118,7 @@ public class AccountServiceImplTest {
     }
 
     @Test
-    public void testSourceNotFound() {
+    void testSourceNotFound() {
         when(accountDao.findById(any())).thenReturn(Optional.empty());
 
         AccountException result = assertThrows(AccountException.class, new Executable() {
@@ -132,7 +132,7 @@ public class AccountServiceImplTest {
 
 
     @Test
-    public void testTransferWithVerify() {
+    void testTransferWithVerify() {
         Account sourceAccount = new Account();
         sourceAccount.setAmount(new BigDecimal(100));
         sourceAccount.setId(1L);
